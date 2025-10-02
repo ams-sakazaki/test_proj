@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン - モック認証サービス</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- カスタムCSS -->
+  <link rel="stylesheet" href="/css/custom.css">
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+          <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4">ログイン</h2>
+
+            <form id="loginForm">
+              <!-- 企業ID -->
+              <div class="mb-3">
+                <label for="companyId" class="form-label">企業ID</label>
+                <input type="text" class="form-control" id="companyId" name="companyId">
+                <div class="invalid-feedback">
+                  企業IDを入力してください
+                </div>
+              </div>
+
+              <!-- メールアドレス -->
+              <div class="mb-3">
+                <label for="email" class="form-label">メールアドレス</label>
+                <input type="email" class="form-control" id="email" name="email">
+                <div class="invalid-feedback">
+                  メールアドレスを入力してください
+                </div>
+              </div>
+
+              <!-- パスワード -->
+              <div class="mb-3">
+                <label for="password" class="form-label">パスワード</label>
+                <input type="password" class="form-control" id="password" name="password">
+                <div class="invalid-feedback">
+                  パスワードを入力してください
+                </div>
+              </div>
+
+              <!-- ログインボタン -->
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg" id="loginButton">
+                  ログイン
+                </button>
+              </div>
+            </form>
+
+            <!-- ローディングスピナー（非表示） -->
+            <div id="loadingSpinner" class="text-center mt-3" style="display: none;">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">処理中...</span>
+              </div>
+              <p class="mt-2">JWT生成中...</p>
+            </div>
+
+            <!-- モック警告 -->
+            <div class="alert alert-warning mt-3" role="alert">
+              <small><strong>注意:</strong> これはモック認証サービスです。本番環境では使用しないでください。</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- jose ライブラリ (JWT生成用) -->
+  <script type="module">
+    // joseライブラリをインポート
+    import { SignJWT } from 'https://cdn.jsdelivr.net/npm/jose@5.2.0/dist/browser/index.js';
+
+    // コールバックURLをサーバーから受け取る
+    window.CALLBACK_URL = '<%= callbackUrl %>';
+
+    // joseをグローバルに公開
+    window.SignJWT = SignJWT;
+  </script>
+
+  <!-- auth.js（JWT生成とリダイレクト処理） -->
+  <script src="/js/auth.js"></script>
+</body>
+</html>
