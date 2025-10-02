@@ -9,7 +9,7 @@
 ## 概要
 
 このドキュメントは、モックログイン認証サービスのインターフェース仕様を定義します。
-フロントエンドのみの実装のため、従来のREST APIではなく、HTML/JavaScriptベースのインターフェースです。
+Node.js + Expressバックエンドで、POSTリクエストボディからコールバックURLを受け取り、Bootstrap 5でスタイリングされたログイン画面を返却します。
 
 ---
 
@@ -17,19 +17,31 @@
 
 ### ログインページ
 
-**URL**: `https://<host>/` または `https://<host>/index.html`
+**URL**: `https://<host>/auth`
 
-**メソッド**: GET（ページアクセス）
+**メソッド**: POST
 
-**クエリパラメータ**:
+**リクエストボディ**:
 | パラメータ名 | 型 | 必須 | 説明 | デフォルト値 |
 |------------|-----|------|------|------------|
 | callback | string | ❌ | 認証成功後のリダイレクト先URL | https://example.com/auth-success |
 
-**例**:
+**Content-Type**: `application/json` または `application/x-www-form-urlencoded`
+
+**例（JSON）**:
+```bash
+curl -X POST https://auth.example.com/auth \
+  -H "Content-Type: application/json" \
+  -d '{"callback": "https://myapp.com/dashboard"}'
 ```
-https://auth.example.com/?callback=https://myapp.com/dashboard
+
+**例（Form）**:
+```bash
+curl -X POST https://auth.example.com/auth \
+  -d "callback=https://myapp.com/dashboard"
 ```
+
+**レスポンス**: HTML（ログイン画面、Bootstrap 5でスタイリング済み）
 
 ---
 
@@ -39,9 +51,14 @@ https://auth.example.com/?callback=https://myapp.com/dashboard
 
 | フィールド名 | HTML要素 | 型 | 必須 | バリデーション | 説明 |
 |------------|---------|-----|------|--------------|------|
-| companyId | `<input type="text">` | string | ✅ | 空でないこと | 企業ID |
-| email | `<input type="email">` | string | ✅ | 空でないこと | メールアドレス |
-| password | `<input type="password">` | string | ✅ | 空でないこと | パスワード |
+| companyId | `<input type="text" class="form-control">` | string | ✅ | 空でないこと | 企業ID（Bootstrapスタイル） |
+| email | `<input type="email" class="form-control">` | string | ✅ | 空でないこと | メールアドレス（Bootstrapスタイル） |
+| password | `<input type="password" class="form-control">` | string | ✅ | 空でないこと | パスワード（Bootstrapスタイル） |
+
+**Bootstrapクラス使用**:
+- `form-control`: フィールドのスタイリング
+- `is-invalid`: バリデーションエラー時に追加
+- `invalid-feedback`: エラーメッセージ表示
 
 ### フォーム送信
 
@@ -147,17 +164,20 @@ const token = fragment.replace('#token=', '');
 2. 赤枠またはハイライトで視覚的にフィードバック
 3. リダイレクトは実行しない
 
-**例（CSS）**:
-```css
-.error {
-  border: 2px solid red;
-  background-color: #ffe6e6;
-}
+**例（Bootstrap使用）**:
+```html
+<div class="mb-3">
+  <label for="companyId" class="form-label">企業ID</label>
+  <input type="text" class="form-control is-invalid" id="companyId">
+  <div class="invalid-feedback">
+    企業IDを入力してください
+  </div>
+</div>
 ```
 
 ### コールバックURL未提供
 
-**トリガー**: URLパラメータに `callback` がない
+**トリガー**: POSTリクエストボディに `callback` がない
 
 **動作**:
 - デフォルトURL（`https://example.com/auth-success`）を使用
@@ -190,17 +210,18 @@ const token = fragment.replace('#token=', '');
 ### 1. 正常系フロー
 
 ```
-1. ユーザーがアクセス
-   URL: https://auth.example.com/?callback=https://myapp.com/dashboard
+1. SaaSアプリがPOSTリクエスト送信
+   POST https://auth.example.com/auth
+   Body: {"callback": "https://myapp.com/dashboard"}
 
-2. ログイン画面表示
+2. ログイン画面表示（Bootstrap 5スタイル）
    - 企業ID: company-123
    - メール: user@example.com
    - パスワード: password123
 
 3. ログインボタンクリック
 
-4. JWT生成
+4. JWT生成（クライアント側）
    ペイロード: {"companyId":"company-123","userId":"mock-user-123",...}
 
 5. リダイレクト
@@ -227,8 +248,9 @@ const token = fragment.replace('#token=', '');
 ### 3. コールバックURL未提供
 
 ```
-1. ユーザーがアクセス
-   URL: https://auth.example.com/（パラメータなし）
+1. SaaSアプリがPOSTリクエスト送信（callbackなし）
+   POST https://auth.example.com/auth
+   Body: {}
 
 2. デフォルトURLを設定
    callbackUrl = "https://example.com/auth-success"

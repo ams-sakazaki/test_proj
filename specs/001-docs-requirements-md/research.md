@@ -68,32 +68,44 @@ GitHub Pages / Netlify / Vercel のいずれかを推奨
 ## 3. POSTリクエストボディの受け取り方法
 
 ### 決定
-URLクエリパラメータとして受け取る
+バックエンドサーバーを実装し、POSTリクエストのボディでコールバックURLを受け取る
 
 ### 理由
-- 静的HTMLページではPOSTリクエストを直接処理できない
-- JavaScriptでURL Paramsを簡単に取得可能
-- モックサービスとしては十分
+- 仕様要件として「POSTリクエストのボディ」での受け取りが必須
+- サーバーレスであることよりも仕様遵守を優先
+- 軽量なバックエンド実装で対応可能
 
 ### 実装詳細
+**バックエンド（Node.js + Express）**:
 ```javascript
-const params = new URLSearchParams(window.location.search);
-const callbackUrl = params.get('callback') || 'https://example.com/auth-success';
+app.post('/auth', (req, res) => {
+  const callbackUrl = req.body.callback || 'https://example.com/auth-success';
+  // HTMLページを返却し、callbackUrlをテンプレートに埋め込む
+  res.render('login', { callbackUrl });
+});
+```
+
+**フロントエンド**:
+```javascript
+// サーバーから渡されたcallbackUrlを使用
+const callbackUrl = window.CALLBACK_URL || 'https://example.com/auth-success';
 ```
 
 ### 検討した代替案
-1. **Cloudflare Workers等のサーバーレス関数**
-   - メリット: POSTリクエストを直接処理可能
-   - デメリット: 複雑度増加、設定が必要
-   - 却下理由: 要件（可能な限りフロントエンドのみ）に反する
+1. **URLクエリパラメータ**
+   - メリット: フロントエンドのみで完結、シンプル
+   - デメリット: 仕様要件（POSTボディ）に反する
+   - 却下理由: ユーザーの仕様変更不可の要求
 
-2. **localStorageに事前保存**
+2. **Cloudflare Workers等のサーバーレス関数**
+   - メリット: サーバーレス、低コスト
+   - デメリット: 設定が複雑
+   - 検討中: 実装候補の一つ
+
+3. **localStorageに事前保存**
    - メリット: URLパラメータ不要
-   - デメリット: 呼び出し側との連携が複雑
-   - 却下理由: ユーザビリティが低下
-
-### 仕様変更の提案
-明確化セクションでは「POSTリクエストのボディ」とされていますが、フロントエンドのみの実装では技術的に不可能です。URLクエリパラメータで代替することを推奨します。
+   - デメリット: 呼び出し側との連携が複雑、POSTリクエストと無関係
+   - 却下理由: 仕様要件を満たさない
 
 ---
 
@@ -164,18 +176,56 @@ const jwt = await new SignJWT({
 
 ---
 
+## 6. バックエンド技術選択
+
+### 決定
+Node.js + Express（軽量Webフレームワーク）
+
+### 理由
+- シンプルで学習コストが低い
+- POSTリクエスト処理が容易
+- テンプレートエンジン（EJS等）で動的HTML生成可能
+- デプロイが簡単（Heroku、Render、Railway等の無料プラン利用可能）
+
+### 実装方針
+- 最小限の機能実装（POSTエンドポイント1つのみ）
+- テンプレートエンジンでログイン画面を動的生成
+- JWT生成はブラウザ側で実行（サーバー負荷軽減）
+
+### 検討した代替案
+1. **Python + Flask**
+   - メリット: シンプル、Python環境
+   - デメリット: JavaScript統一性の欠如
+   - 却下理由: フロントエンドとの技術統一性
+
+2. **Cloudflare Workers**
+   - メリット: サーバーレス、エッジで動作
+   - デメリット: 設定が複雑、制約あり
+   - 検討可能: 将来の最適化候補
+
+---
+
 ## まとめ
 
 すべての技術選択が完了し、NEEDS CLARIFICATIONは解決されました。
 
 **採用技術スタック**:
-- HTML5/CSS3/JavaScript (ES6+)
-- JWT生成: jose（CDN: https://cdn.jsdelivr.net/npm/jose@4/dist/browser/index.js）
-- ホスティング: GitHub Pages / Netlify / Vercel
-- データ受け渡し: URLクエリパラメータ
+- **バックエンド**: Node.js + Express + EJS（テンプレートエンジン）
+- **フロントエンド**: HTML5/CSS3/JavaScript (ES6+)
+- **JWT生成**: jsonwebtoken（Node.js）またはブラウザ側でjose
+- **ホスティング**: Heroku / Render / Railway（バックエンド）
+- **データ受け渡し**: POSTリクエストボディ（仕様遵守）
 
-**重要な仕様変更**:
-- POSTリクエストボディ → URLクエリパラメータ（技術的制約）
+**アーキテクチャ**:
+```
+SaaSアプリ → POST /auth (callback in body) → バックエンド
+                                                ↓
+                                    ログイン画面HTML返却
+                                                ↓
+                                    ユーザー入力 + JWT生成（ブラウザ）
+                                                ↓
+                                    リダイレクト（callback#token=...）
+```
 
 **次のステップ**:
 フェーズ1: データモデル設計とコントラクト定義
