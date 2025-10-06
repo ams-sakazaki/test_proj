@@ -54,10 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // JWTペイロード生成
       const payload = {
-        companyId: companyId,
-        userId: 'mock-user-123',
+        userId: 'USER-2025-001',
+        userName: '山田太郎',
+        companyId: 'COMP-2025-001',
+        companyName: '株式会社サンプル商事',
+        storeId: 'SHOP-2025-0001',
+        storeName: 'サンプルストア東京',
         accessToken: crypto.randomUUID(),
-        expiresAt: Math.floor(Date.now() / 1000) + 86400, // 24時間後
+        expireAt: Math.floor(Date.now() / 1000) + 86400, // 24時間後
       };
 
       // 秘密鍵
