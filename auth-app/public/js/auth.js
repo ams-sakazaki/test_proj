@@ -58,10 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
         userName: '山田太郎',
         companyId: 'COMP-2025-001',
         companyName: '株式会社サンプル商事',
-        storeId: 'SHOP-2025-0001',
+        storeId: 'xn-ams-nk4c6lre4725av5km35dro0d.myshopify.com',
         storeName: 'サンプルストア東京',
         accessToken: crypto.randomUUID(),
         expireAt: Math.floor(Date.now() / 1000) + 86400, // 24時間後
+        ecserviceAccessToken: '2fc3a6b8f736ad1b2d964028a83a1dd7',
       };
 
       // 秘密鍵
