@@ -52,43 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingSpinner.style.display = 'block';
 
     try {
-      // JWTペイロード生成
-      const payload = {
-        userId: 'USER-2025-001',
-        userName: '山田太郎',
-        companyId: 'COMP-2025-001',
-        companyName: '株式会社サンプル商事',
-        storeId: 'xn-ams-nk4c6lre4725av5km35dro0d.myshopify.com',
-        storeName: 'サンプルストア東京',
-        accessToken: crypto.randomUUID(),
-        expireAt: Math.floor(Date.now() / 1000) + 86400, // 24時間後
-        ecserviceAccessToken: '2fc3a6b8f736ad1b2d964028a83a1dd7',
-      };
+      // 固定の認証コード
+      const code = "11d37eec2cb0d6be13a61282ff894c87359e6e5af170fe3a70fc74e2497a948d&";
+      const state = window.STATE || ''; // サーバーから渡されたstate
 
-      // 秘密鍵
-      const secret = new TextEncoder().encode('mock-secret-key-do-not-use-in-production');
-
-      // JWT生成（joseライブラリ使用）
-      const jwt = await new window.SignJWT(payload)
-        .setProtectedHeader({ alg: 'HS256' })
-        .sign(secret);
-
-      console.log('JWT生成成功:', jwt);
-      console.log('ペイロード:', payload);
-
-      // コールバックURLにリダイレクト
+      // コールバックURLにリダイレクト（URLフラグメント形式）
       const callbackUrl = window.CALLBACK_URL || 'https://example.com/auth-success';
-      const redirectUrl = `${callbackUrl}#token=${jwt}`;
+      const redirectUrl = `${callbackUrl}#code=${code}&state=${state}`;
 
       console.log('リダイレクト先:', redirectUrl);
+      console.log('認証コード:', code);
+      console.log('state:', state);
 
       // 少し待ってからリダイレクト（UX向上）
       setTimeout(() => {
         window.location.href = redirectUrl;
       }, 500);
     } catch (error) {
-      console.error('JWT生成エラー:', error);
-      alert('JWT生成中にエラーが発生しました: ' + error.message);
+      console.error('リダイレクトエラー:', error);
+      alert('リダイレクト中にエラーが発生しました: ' + error.message);
 
       // エラー時はフォームを再表示
       loginButton.disabled = false;
